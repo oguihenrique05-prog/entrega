@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acelerador de Vendas - Oferta Exclusiva</title>
+    <title>Compra Aprovada - Acesso Liberado</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&family=Poppins:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -21,16 +21,12 @@
             100% { box-shadow: 0 0 0 0 rgba(36, 192, 79, 0); }
         }
         .animate-pulse-green { animation: pulse-green 2s infinite; }
-
-        /* Estilos base para compatibilidade com Lastlink */
-        .button-accept { cursor: pointer; transition: all 0.3s ease; }
-        .button-deny { cursor: pointer; transition: all 0.3s ease; }
     </style>
 
+    <!-- Script de Tracking Mantido Intacto para marcar a Conversão -->
     <script>
     (function () {
       "use strict";
-
       var API_BASE = "https://brain-saas.vercel.app";
       var PIXEL_PUBLIC_KEY = "px_D7XBCpYqp6dO4nTz";
       var prefix = ["https://lastlink.com","https://kirvano.com","https://pay.kirvano.com","https://checkout.kirvano.com","pay.yampi.com.br"];
@@ -44,9 +40,7 @@
       function setCookie(name, value, days) {
         var d = new Date();
         d.setTime(d.getTime() + (days || 365) * 24 * 60 * 60 * 1000);
-        document.cookie =
-          name + "=" + encodeURIComponent(value) +
-          "; path=/; expires=" + d.toUTCString() + "; SameSite=Lax";
+        document.cookie = name + "=" + encodeURIComponent(value) + "; path=/; expires=" + d.toUTCString() + "; SameSite=Lax";
       }
 
       function uuid() {
@@ -68,17 +62,12 @@
       }
 
       function getQueryParam(name) {
-        try {
-          return new URL(location.href).searchParams.get(name);
-        } catch (e) {
-          return null;
-        }
+        try { return new URL(location.href).searchParams.get(name); } catch (e) { return null; }
       }
 
       function ensureFbp() {
         var existing = getCookie("_fbp");
         if (existing) return existing;
-
         var fbp = "fb.1." + Date.now() + "." + Math.floor(Math.random() * 1e16);
         setCookie("_fbp", fbp, 90);
         return fbp;
@@ -87,68 +76,24 @@
       function ensureFbc() {
         var existing = getCookie("_fbc");
         if (existing) return existing;
-
         var fbclid = getQueryParam("fbclid");
         if (!fbclid) return null;
-
         var fbc = "fb.1." + Date.now() + "." + fbclid;
         setCookie("_fbc", fbc, 90);
         return fbc;
-      }
-
-      function safeResolveUrl(href) {
-        var resolved = href;
-        try { resolved = new URL(href, location.href).href; } catch (e) {}
-        return resolved;
-      }
-
-      function looksLikeCheckout(url) {
-        url = String(url || "");
-        for (var j = 0; j < prefix.length; j++) {
-          if (url.indexOf(prefix[j]) !== -1) return true;
-        }
-        var low = url.toLowerCase();
-        if (low.indexOf("checkout") !== -1 || low.indexOf("pay") !== -1 || low.indexOf("payment") !== -1) return true;
-        return false;
       }
 
       function buildUtms() {
         var r = new URL(location.href);
         var sid = getOrCreateSid();
         var out = {};
-
         out.utm_source = r.searchParams.get("utm_source") || "direto";
         out.utm_term = "sid:" + sid;
-
         if (r.searchParams.get("utm_medium")) out.utm_medium = r.searchParams.get("utm_medium");
         if (r.searchParams.get("utm_campaign")) out.utm_campaign = r.searchParams.get("utm_campaign");
         if (r.searchParams.get("utm_content")) out.utm_content = r.searchParams.get("utm_content");
         if (r.searchParams.get("fbclid")) out.fbclid = r.searchParams.get("fbclid");
-
         return out;
-      }
-
-      function applyUtmsToUrl(resolvedUrl, utms, forceUtmTerm) {
-        try {
-          var u = new URL(resolvedUrl);
-
-          for (var key in utms) {
-            if (!utms.hasOwnProperty(key)) continue;
-            if (!utms[key]) continue;
-
-            if (key === "utm_term") {
-              if (forceUtmTerm) u.searchParams.set("utm_term", utms.utm_term);
-              else if (!u.searchParams.get("utm_term")) u.searchParams.set("utm_term", utms.utm_term);
-              continue;
-            }
-
-            if (!u.searchParams.get(key)) u.searchParams.set(key, utms[key]);
-          }
-
-          return u.toString();
-        } catch (e) {
-          return resolvedUrl;
-        }
       }
 
       function sendEvent(payload) {
@@ -159,82 +104,26 @@
             return;
           }
         } catch (e) {}
-
         fetch(TRACK_URL, {
-          method: "POST",
-          mode: "cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          keepalive: true
+          method: "POST", mode: "cors", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload), keepalive: true
         }).catch(function(){});
       }
 
       function postEvent(eventName) {
         var sid = getOrCreateSid();
-
         var payload = {
-          pixel_id: PIXEL_PUBLIC_KEY,
-          sid: sid,
-          event: eventName,
+          pixel_id: PIXEL_PUBLIC_KEY, sid: sid, event: eventName,
           event_id: eventName + "_" + sid + "_" + Date.now(),
-          url: location.href,
-          utm: buildUtms(),
-          fbp: ensureFbp(),
-          fbc: ensureFbc()
+          url: location.href, utm: buildUtms(), fbp: ensureFbp(), fbc: ensureFbc()
         };
-
         sendEvent(payload);
-      }
-
-      function updateLinks() {
-        var utms = buildUtms();
-        var anchors = document.querySelectorAll("a[href]");
-        for (var i = 0; i < anchors.length; i++) {
-          var a = anchors[i];
-          var href = a.getAttribute("href") || "";
-          if (!href) continue;
-
-          var resolved = safeResolveUrl(href);
-          if (!looksLikeCheckout(resolved)) continue;
-
-          a.href = applyUtmsToUrl(resolved, utms, true);
-        }
       }
 
       function init() {
         ensureFbp();
-        updateLinks();
-        postEvent("PageView");
-
-        var tries = 0;
-        var t = setInterval(function () {
-          tries++;
-          updateLinks();
-          if (tries >= 10) clearInterval(t);
-        }, 1000);
-
-        if (window.MutationObserver) {
-          var mo = new MutationObserver(function () { updateLinks(); });
-          mo.observe(document.documentElement, { childList: true, subtree: true });
-        }
+        postEvent("PageView"); // Dispara o PageView ao carregar a página de obrigado
       }
-
-      document.addEventListener("click", function (e) {
-        var el = e.target;
-        var a = el && el.closest ? el.closest("a") : null;
-        if (!a) return;
-
-        var href = a.getAttribute("href") || "";
-        if (!href) return;
-
-        var resolved = safeResolveUrl(href);
-        if (!looksLikeCheckout(resolved)) return;
-
-        var utms = buildUtms();
-        a.href = applyUtmsToUrl(resolved, utms, true);
-
-        postEvent("InitiateCheckout");
-      }, true);
 
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", init);
@@ -249,217 +138,82 @@
     <!-- --- BARRA DE TRAVA (CONFIRMAÇÃO) --- -->
     <div class="bg-[#24c04f] py-4 md:py-5 px-4 text-center relative z-[100] shadow-[0_5px_20px_rgba(36,192,79,0.3)] border-b border-white/20 sticky top-0">
         <p class="text-white text-sm md:text-lg lg:text-xl font-medium flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 tracking-wide">
-            <span class="flex items-center justify-center gap-2 text-yellow-300 font-black uppercase"><i data-lucide="check-circle" size="24" class="animate-pulse"></i> Compra Aprovada: Parabéns!</span>
-            <span class="mt-1 md:mt-0">O acesso ao curso está logo abaixo.</span>
+            <span class="flex items-center justify-center gap-2 text-yellow-300 font-black uppercase"><i data-lucide="check-circle" size="24" class="animate-pulse"></i> Pagamento Aprovado!</span>
+            <span class="mt-1 md:mt-0">Sua vaga está garantida.</span>
         </p>
     </div>
 
-    <!-- --- SEÇÃO PRINCIPAL --- -->
-    <section class="relative flex flex-col items-center justify-start overflow-hidden bg-gradient-to-b from-[#1e1b4b] to-[#0f0e24] pt-16 pb-24">
+    <!-- --- SEÇÃO PRINCIPAL (ENTREGA) --- -->
+    <section class="relative flex flex-col items-center justify-center min-h-[90vh] overflow-hidden bg-gradient-to-b from-[#1e1b4b] to-[#0f0e24] py-16 px-4">
         <div class="absolute inset-0 z-0 opacity-40" style="background: radial-gradient(circle at 50% 10%, #4c1d95 0%, transparent 80%);"></div>
         
-        <div class="max-w-5xl mx-auto px-4 relative z-10 flex flex-col items-center text-center">
+        <div class="max-w-4xl w-full mx-auto relative z-10 flex flex-col items-center text-center">
             
-            <!-- HEADLINE (Reduzida para elegância, mas mantendo a hierarquia de conversão) -->
-            <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-white mb-6 md:mb-8 tracking-tight leading-snug max-w-4xl mx-auto">
-                <span class="text-red-500 drop-shadow-md">🚨 ESPERE!</span> Ter o freezer cheio de sorvetes deliciosos não paga as contas se você não tiver um sistema para vender todos os dias do ano.
+            <!-- ELEMENTO CELEBRATIVO -->
+            <div class="w-24 h-24 bg-yellow-400/20 rounded-full flex items-center justify-center border-2 border-yellow-400/50 mb-8 shadow-[0_0_50px_rgba(250,204,21,0.3)]">
+                <i data-lucide="party-popper" size="48" class="text-yellow-400 drop-shadow-lg"></i>
+            </div>
+
+            <!-- HEADLINE -->
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight leading-snug max-w-3xl mx-auto">
+                Parabéns! O seu acesso ao curso <span class="text-yellow-400 italic">já foi liberado.</span>
             </h1>
 
-            <!-- SUB-HEADLINE (Fundo claro para fonte preta) -->
-            <div class="glass-card-light rounded-[25px] p-6 md:p-10 max-w-4xl mx-auto mb-20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform -rotate-1 hover:rotate-0 transition-transform duration-500">
-                <p class="text-gray-900 text-base md:text-xl font-semibold leading-relaxed font-montserrat text-left md:text-center block">
-                    Você acabou de dar o primeiro passo para criar sorvetes que dão água na boca. Mas a verdade nua e crua do mercado é esta: <span class="font-black text-red-600">fazer o sorvete é só 50% do trabalho.</span><br><br>
-                    Não adianta ficar dependendo da sorte, esperando o fim de semana ou rezando para fazer calor. Quem ganha dinheiro de verdade na confeitaria sabe como <span class="font-black underline decoration-red-500 decoration-4 underline-offset-4 uppercase">gerar desejo</span> no cliente em qualquer época do ano. Seja na segunda-feira, no verão escaldante ou no meio do mês.
-                </p>
-            </div>
+            <p class="text-white/80 text-lg md:text-xl font-light mb-12 max-w-2xl mx-auto font-montserrat leading-relaxed">
+                Você acaba de dar o primeiro passo para transformar a sua cozinha em uma verdadeira fábrica de lucros. Estamos muito felizes em ter você aqui!
+            </p>
 
-            <!-- MOCKUP (PRODUTO) - LAYOUT LIMPO E SEPARADO -->
-            <div class="relative w-full flex flex-col md:flex-row justify-center items-center gap-10 md:gap-8 lg:gap-12 mb-24 mt-8 md:mt-16 z-20">
-                <!-- Fundo de Brilho -->
-                <div class="absolute inset-0 bg-yellow-400/20 blur-[120px] rounded-full scale-125 -z-10 pointer-events-none"></div>
+            <!-- CAIXA DE INSTRUÇÕES (PASSO A PASSO) -->
+            <div class="glass-card-light rounded-[30px] p-8 md:p-12 w-full max-w-3xl shadow-[0_20px_50px_rgba(0,0,0,0.4)] mb-12 text-left">
+                <h3 class="text-gray-900 text-xl md:text-2xl font-black uppercase tracking-tighter mb-8 text-center border-b border-gray-200 pb-4">Seus próximos passos:</h3>
                 
-                <!-- 1. FOTO PRODUÇÃO (Esquerda) -->
-                <div class="relative w-48 h-56 md:w-56 md:h-64 rounded-[20px] border-[6px] border-white shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden -rotate-3 hover:rotate-0 transition-transform duration-500 z-10">
-                    <img src="imagem1.webp" alt="Produção de Sorvetes" class="w-full h-full object-cover">
-                    <!-- Gradiente e Texto do Acelerador -->
-                    <div class="absolute inset-0 flex flex-col items-center justify-end p-4 text-white text-center bg-gradient-to-t from-black/90 via-black/20 to-transparent">
-                        <i data-lucide="zap" size="28" class="text-yellow-400 mb-2 drop-shadow-md"></i>
-                        <p class="font-black text-[12px] md:text-sm uppercase tracking-wider drop-shadow-md leading-tight">Acelerador<br>de Vendas</p>
-                    </div>
-                </div>
-
-                <!-- 2. TABLET MOCKUP (Centro) -->
-                <div class="relative w-64 h-[320px] md:w-80 md:h-[400px] bg-gray-900 rounded-[24px] md:rounded-[36px] border-[6px] border-[#2d2a5d] shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden hover:-translate-y-2 transition-transform duration-500 z-20">
-                    <img src="imagem2.webp" alt="Gestão Financeira e Aula" class="w-full h-full object-cover">
-                    <!-- Gradiente escuro apenas para leitura do texto -->
-                    <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-white text-center bg-black/40">
-                        <i data-lucide="bar-chart-3" size="56" class="text-[#24c04f] mb-3 drop-shadow-lg"></i>
-                        <p class="font-black text-xl md:text-2xl uppercase tracking-tighter leading-none mb-1 drop-shadow-md">Gestão</p>
-                        <p class="font-bold text-sm md:text-base text-yellow-400 uppercase tracking-widest drop-shadow-md">Financeira</p>
-                    </div>
-                </div>
-
-                <!-- 3. PHONE MOCKUP (Direita) -->
-                <div class="relative w-40 h-[280px] md:w-48 md:h-[340px] bg-gray-900 rounded-[20px] md:rounded-[30px] border-[5px] border-[#2d2a5d] shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden rotate-3 hover:rotate-0 transition-transform duration-500 z-10">
-                    <img src="imagem3.webp" alt="Tirando Foto de Sorvete" class="w-full h-full object-cover">
-                    <!-- Gradiente suave que vem de baixo -->
-                    <div class="absolute inset-0 flex flex-col items-center justify-end p-4 text-white text-center bg-gradient-to-t from-black/90 via-black/20 to-transparent">
-                        <i data-lucide="camera" size="28" class="text-[#24c04f] mb-2 drop-shadow-md"></i>
-                        <p class="font-black text-[12px] md:text-sm uppercase tracking-wider drop-shadow-md leading-tight">Fotos que<br>Vendem</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- INTRODUÇÃO AOS BENEFÍCIOS -->
-            <div class="max-w-4xl mx-auto text-center mb-12">
-                <h2 class="text-2xl md:text-4xl font-black text-white mb-6 tracking-tighter leading-tight">É exatamente para isso que eu criei o <span class="text-yellow-400 italic">Acelerador de Vendas Sorvete Lucrativo.</span></h2>
-                <p class="text-white/80 text-base md:text-lg font-light leading-relaxed max-w-3xl mx-auto">
-                    Esqueça PDFs ou diquinhas rasas de internet. O Acelerador é um <strong class="text-white">curso completo e direto ao ponto</strong>. É o meu arsenal de estratégias prontas para você copiar, colar e aplicar hoje mesmo para esgotar o seu estoque mais rápido do que você consegue produzir.
-                    <br><br>
-                    <strong class="text-white text-lg md:text-xl">Veja exatamente o que você vai desbloquear agora por um valor simbólico:</strong>
-                </p>
-            </div>
-
-            <!-- BULLET POINTS (BENEFÍCIOS) -->
-            <div class="w-full max-w-4xl mx-auto space-y-6 mb-24">
-                <div class="glass-card p-6 md:p-8 rounded-[30px] flex items-start md:items-center gap-5 md:gap-8 text-left group hover:bg-white/10 transition-colors">
-                    <div class="mt-1 md:mt-0 bg-[#24c04f] rounded-full p-2 text-white shrink-0 shadow-lg group-hover:scale-110 transition-transform"><i data-lucide="check" size="28"></i></div>
-                    <p class="text-white text-base md:text-lg font-light font-montserrat leading-relaxed"><strong class="text-yellow-400 font-bold">O Funil do WhatsApp Magnético:</strong> Chega de clientes que perguntam o preço e somem. Você vai receber meus roteiros exatos de mensagens (scripts) para transformar curiosos em compradores fiéis, que compram toda semana.</p>
-                </div>
-                
-                <div class="glass-card p-6 md:p-8 rounded-[30px] flex items-start md:items-center gap-5 md:gap-8 text-left group hover:bg-white/10 transition-colors">
-                    <div class="mt-1 md:mt-0 bg-[#24c04f] rounded-full p-2 text-white shrink-0 shadow-lg group-hover:scale-110 transition-transform"><i data-lucide="check" size="28"></i></div>
-                    <p class="text-white text-base md:text-lg font-light font-montserrat leading-relaxed"><strong class="text-yellow-400 font-bold">A Mina de Ouro das Parcerias (Venda em Lote):</strong> O passo a passo de como abordar padarias, restaurantes, lanchonetes e organizadores de festas da sua região para fechar contratos fixos. Imagine vender 50, 100 sorvetes de uma vez só.</p>
-                </div>
-                </div>
-            </div>
-
-            <!-- INTRODUÇÃO AOS BENEFÍCIOS -->
-            <div class="max-w-4xl mx-auto text-center mb-12">
-                <h2 class="text-2xl md:text-4xl font-black text-white mb-6 tracking-tighter leading-tight">É exatamente para isso que eu criei o <span class="text-yellow-400 italic">Acelerador de Vendas Picolé Lucrativo.</span></h2>
-                <p class="text-white/80 text-base md:text-lg font-light leading-relaxed max-w-3xl mx-auto">
-                    Esqueça PDFs ou diquinhas rasas de internet. O Acelerador é um <strong class="text-white">curso completo e direto ao ponto</strong>. É o meu arsenal de estratégias prontas para você copiar, colar e aplicar hoje mesmo para esgotar o seu estoque mais rápido do que você consegue produzir.
-                    <br><br>
-                    <strong class="text-white text-lg md:text-xl">Veja exatamente o que você vai desbloquear agora por um valor simbólico:</strong>
-                </p>
-            </div>
-
-            <!-- BULLET POINTS (BENEFÍCIOS) -->
-            <div class="w-full max-w-4xl mx-auto space-y-6 mb-24">
-                <div class="glass-card p-6 md:p-8 rounded-[30px] flex items-start md:items-center gap-5 md:gap-8 text-left group hover:bg-white/10 transition-colors">
-                    <div class="mt-1 md:mt-0 bg-[#24c04f] rounded-full p-2 text-white shrink-0 shadow-lg group-hover:scale-110 transition-transform"><i data-lucide="check" size="28"></i></div>
-                    <p class="text-white text-base md:text-lg font-light font-montserrat leading-relaxed"><strong class="text-yellow-400 font-bold">O Funil do WhatsApp Magnético:</strong> Chega de clientes que perguntam o preço e somem. Você vai receber meus roteiros exatos de mensagens (scripts) para transformar curiosos em compradores fiéis, que compram toda semana.</p>
-                </div>
-                
-                <div class="glass-card p-6 md:p-8 rounded-[30px] flex items-start md:items-center gap-5 md:gap-8 text-left group hover:bg-white/10 transition-colors">
-                    <div class="mt-1 md:mt-0 bg-[#24c04f] rounded-full p-2 text-white shrink-0 shadow-lg group-hover:scale-110 transition-transform"><i data-lucide="check" size="28"></i></div>
-                    <p class="text-white text-base md:text-lg font-light font-montserrat leading-relaxed"><strong class="text-yellow-400 font-bold">A Mina de Ouro das Parcerias (Venda em Lote):</strong> O passo a passo de como abordar padarias, restaurantes, lanchonetes e organizadores de festas da sua região para fechar contratos fixos. Imagine vender 50, 100 picolés de uma vez só.</p>
-                </div>
-                
-                <div class="glass-card p-6 md:p-8 rounded-[30px] flex items-start md:items-center gap-5 md:gap-8 text-left group hover:bg-white/10 transition-colors">
-                    <div class="mt-1 md:mt-0 bg-[#24c04f] rounded-full p-2 text-white shrink-0 shadow-lg group-hover:scale-110 transition-transform"><i data-lucide="check" size="28"></i></div>
-                    <p class="text-white text-base md:text-lg font-light font-montserrat leading-relaxed"><strong class="text-yellow-400 font-bold">Técnica da Vitrine Irresistível:</strong> Como tirar fotos simples com o seu celular que causam "água na boca" instantânea e geram dezenas de pedidos no seu Instagram e Facebook, mesmo que você tenha poucos seguidores.</p>
-                </div>
-                
-                <div class="glass-card p-6 md:p-8 rounded-[30px] flex items-start md:items-center gap-5 md:gap-8 text-left group hover:bg-white/10 transition-colors">
-                    <div class="mt-1 md:mt-0 bg-[#24c04f] rounded-full p-2 text-white shrink-0 shadow-lg group-hover:scale-110 transition-transform"><i data-lucide="check" size="28"></i></div>
-                    <p class="text-white text-base md:text-lg font-light font-montserrat leading-relaxed"><strong class="text-yellow-400 font-bold">O Domínio do Delivery de Bairro:</strong> Como estruturar entregas rápidas na sua região (com ou sem iFood) para dominar um raio de 5km da sua casa e ser a primeira opção de sobremesa de todos os seus vizinhos.</p>
-                </div>
-            </div>
-
-            <!-- SEÇÃO DE OFERTA E PREÇO -->
-            <div id="oferta-final" class="w-full p-8 md:p-16 bg-[#1e1b4b] border-2 border-yellow-400/40 rounded-[40px] md:rounded-[60px] relative overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
-                <div class="absolute top-0 right-0 bg-yellow-400 text-[#1e1b4b] px-6 py-2 font-black text-[10px] uppercase tracking-widest rounded-bl-3xl shadow-lg">Oferta Exclusiva</div>
-                
-                <div class="relative z-10 flex flex-col items-center">
-                    <p class="text-white/80 text-base md:text-xl font-medium mb-8 font-montserrat max-w-3xl leading-relaxed text-center">
-                        Se eu fosse vender essas estratégias separadas, cobraria facilmente <span class="line-through text-white/50">R$ 197</span> por esse conhecimento. Mas como você acabou de confiar no meu trabalho e se tornou aluna, eu quero garantir que você tenha sucesso rápido.
-                        <br><br>
-                        Por isso, você pode adicionar o Acelerador de Vendas ao seu pedido agora por um <span class="text-yellow-400 font-bold">pagamento único</span> de apenas:
-                    </p>
-                    
-                    <div class="flex items-baseline justify-center gap-3 mb-12">
-                        <span class="text-yellow-400 text-4xl md:text-5xl font-black">R$</span>
-                        <span class="text-white text-8xl md:text-[140px] font-black tracking-tighter leading-none text-yellow-400 drop-shadow-2xl">47</span>
+                <div class="space-y-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-[#1e1b4b] text-white font-black flex items-center justify-center shrink-0 text-lg">1</div>
+                        <div>
+                            <p class="text-gray-900 font-bold text-lg leading-tight mb-1">Acesse a Plataforma</p>
+                            <p class="text-gray-600 text-sm md:text-base font-montserrat leading-relaxed">Clique no botão verde grande logo abaixo para ser redirecionada imediatamente para a sua área de alunos exclusiva.</p>
+                        </div>
                     </div>
                     
-                    <!-- BOTÃO DE COMPRA (O SIM VERDE E PULSANTE) -->
-                    <div class="w-full max-w-3xl flex flex-col items-center gap-6">
-                        <a href="https://confeiteira-mari.pay.yampi.com.br/r/JHL8C6DOR7" class="button-accept w-full bg-[#24c04f] hover:bg-[#1da844] text-white py-6 md:py-8 rounded-[30px] font-black text-lg md:text-[22px] shadow-[0_20px_50px_rgba(36,192,79,0.5)] uppercase tracking-tighter text-center flex items-center justify-center gap-3 md:gap-4 animate-pulse-green px-4 transition-colors">
-                            <i data-lucide="shopping-bag" class="w-6 h-6 md:w-8 md:h-8 shrink-0"></i>
-                            <span class="leading-tight">👉 SIM! QUERO ADICIONAR O ACELERADOR E VENDER O ANO TODO (R$ 47)</span>
-                        </a>
-                        
-                        <!-- BOTÃO DE RECUSA QUE ABRE O POPUP (Não é mais o denyButton direto) -->
-                        <div onclick="abrirPopupDownsell()" class="cursor-pointer text-[#8b92a5] hover:text-[#d1d5db] text-[11px] md:text-sm uppercase font-bold tracking-widest text-center max-w-2xl leading-relaxed underline underline-offset-4 mt-2 transition-colors">
-                            🔗 Não, obrigada. Eu assumo o risco de tentar descobrir como vender sozinha e ficar com o freezer cheio. Quero apenas o curso de sorvetes.
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-[#1e1b4b] text-white font-black flex items-center justify-center shrink-0 text-lg">2</div>
+                        <div>
+                            <p class="text-gray-900 font-bold text-lg leading-tight mb-1">Verifique seu E-mail</p>
+                            <p class="text-gray-600 text-sm md:text-base font-montserrat leading-relaxed">Nós também enviamos um e-mail com o seu link de acesso e recibo da compra. (Lembre-se de checar o spam).</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-[#1e1b4b] text-white font-black flex items-center justify-center shrink-0 text-lg">3</div>
+                        <div>
+                            <p class="text-gray-900 font-bold text-lg leading-tight mb-1">Comece a Estudar</p>
+                            <p class="text-gray-600 text-sm md:text-base font-montserrat leading-relaxed">Assista à primeira aula de boas-vindas e prepare-se para colocar a mão na massa.</p>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- BOTÃO DE ACESSO DIRETO À LOVABLE -->
+            <div class="w-full max-w-2xl flex flex-col items-center">
+                <p class="text-yellow-400 font-bold tracking-widest uppercase text-xs md:text-sm mb-4 animate-pulse">👇 CLIQUE ABAIXO PARA ENTRAR 👇</p>
+                
+                <a href="https://sorvetes-caseiros.lovable.app" class="button-accept w-full bg-[#24c04f] hover:bg-[#1da844] text-white py-6 md:py-8 rounded-[30px] font-black text-xl md:text-2xl shadow-[0_20px_50px_rgba(36,192,79,0.5)] uppercase tracking-tighter text-center flex items-center justify-center gap-3 md:gap-4 animate-pulse-green px-4 transition-transform hover:scale-[1.02] active:scale-[0.98]">
+                    <i data-lucide="log-in" class="w-6 h-6 md:w-8 md:h-8 shrink-0"></i>
+                    <span class="leading-tight">ACESSAR MEU CURSO AGORA</span>
+                </a>
+                
+                <p class="mt-6 text-white/40 text-xs md:text-sm font-montserrat flex items-center gap-2">
+                    <i data-lucide="shield-check" size="16"></i> Ambiente 100% Seguro e Exclusivo para Alunos
+                </p>
             </div>
             
         </div>
     </section>
 
-    <!-- --- POPUP DE DOWNSELL (R$ 37) --- -->
-    <div id="popupDownsell" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 md:p-6">
-        <!-- Fundo escuro desfocado -->
-        <div class="absolute inset-0 bg-[#0f0e24]/95 backdrop-blur-md" onclick="fecharPopupDownsell()"></div>
-        
-        <!-- Conteúdo do Popup -->
-        <div class="relative w-full max-w-xl bg-[#1e1b4b] border-2 border-red-500/50 rounded-[40px] p-8 md:p-12 shadow-[0_0_150px_rgba(239,68,68,0.25)] text-center animate-in zoom-in duration-300">
-            <!-- Botão de Fechar -->
-            <button onclick="fecharPopupDownsell()" class="absolute top-6 right-6 text-white/40 hover:text-white transition-colors">
-                <i data-lucide="x" size="28"></i>
-            </button>
-            
-            <div class="relative z-10 text-center">
-                <div class="inline-flex items-center gap-2 bg-red-500/20 text-red-500 px-6 py-2 rounded-full text-[10px] font-black uppercase mb-6 border border-red-500/30 tracking-[0.2em] animate-pulse">
-                    <i data-lucide="alert-triangle" size="14"></i> ÚLTIMA CHANCE
-                </div>
-                
-                <h2 class="text-3xl md:text-5xl font-black text-white mb-6 tracking-tighter leading-tight">ESPERE! Não vá embora com o freezer cheio.</h2>
-                
-                <p class="text-white/80 text-sm md:text-base font-montserrat mb-8 max-w-md mx-auto leading-relaxed">
-                    Eu sei que o preço pode estar apertado agora. Então vou fazer algo inédito. Eu vou tirar o meu lucro e te entregar o <strong>Acelerador de Vendas</strong> com um <span class="text-yellow-400 font-bold">desconto final</span>:
-                </p>
-                
-                <div class="mb-10 flex items-baseline justify-center gap-2">
-                    <span class="text-yellow-400 text-3xl font-bold tracking-tighter">R$</span>
-                    <span class="text-white text-7xl md:text-8xl font-black tracking-tighter text-yellow-400 drop-shadow-xl">37</span>
-                </div>
-                
-                <!-- BOTÃO DE COMPRA DO DOWNSELL -->
-                <a href="https://confeiteira-mari.pay.yampi.com.br/r/EEQIZXOG47" class="button-accept w-full bg-[#24c04f] hover:bg-[#1da844] text-white py-6 md:py-8 rounded-[25px] font-black text-lg md:text-xl shadow-[0_15px_40px_rgba(36,192,79,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-tighter flex items-center justify-center gap-3">
-                    SIM! QUERO POR APENAS R$ 37
-                </a>
-                
-                <!-- BOTÃO DE RECUSA DEFINITIVA (Link atualizado) -->
-                <a href="https://sorvetes-caseiros.lovable.app" class="mt-8 block text-white/30 hover:text-white/80 text-[10px] md:text-xs uppercase underline font-montserrat tracking-widest font-bold underline-offset-8 transition-all text-center">
-                    Não, quero apenas acessar meu curso de sorvetes e perder essa oferta para sempre.
-                </a>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
     <script>
         lucide.createIcons();
-
-        // Funções para controlar o Popup
-        function abrirPopupDownsell() {
-            const popup = document.getElementById('popupDownsell');
-            popup.classList.remove('hidden');
-            popup.classList.add('flex');
-            document.body.style.overflow = 'hidden'; // Impede o scroll da página no fundo
-        }
-
-        function fecharPopupDownsell() {
-            const popup = document.getElementById('popupDownsell');
-            popup.classList.add('hidden');
-            popup.classList.remove('flex');
-            document.body.style.overflow = 'auto'; // Restaura o scroll
-        }
     </script>
 
 </body>
